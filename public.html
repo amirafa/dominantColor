@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dominant Color Detection</title>
+    <style>
+        #imageContainer {
+            position: relative;
+            display: inline-block;
+        }
+        #output {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            padding: 10px;
+            color: white;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #myImage {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="fileInput" accept="image/*">
+    <div id="imageContainer">
+        <img id="myImage" src="" alt="Selected Image">
+        <div id="output">Text</div>
+    </div>
+    <canvas id="myCanvas" style="display:none;"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const image = document.getElementById('myImage');
+                    image.src = e.target.result;
+                    image.onload = function() {
+                        processImage(image);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function processImage(image) {
+            const canvas = document.getElementById('myCanvas');
+            const ctx = canvas.getContext('2d');
+            const output = document.getElementById('output');
+            const colorThief = new ColorThief();
+
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0, image.width, image.height);
+
+            // Get the dominant color
+            const dominantColor = colorThief.getColor(image);
+
+            // Convert RGB to luminance
+            const luminance = (0.299 * dominantColor[0] + 0.587 * dominantColor[1] + 0.114 * dominantColor[2]) / 255;
+
+            // Determine whether to use black or white text
+            const textColor = luminance > 0.5 ? 'black' : 'white';
+
+            // Output the result
+            output.textContent = textColor;
+            output.style.color = textColor;
+            output.style.backgroundColor = `rgba(${dominantColor[0]}, ${dominantColor[1]}, ${dominantColor[2]}, 0.7)`;
+        }
+    </script>
+</body>
+</html>
+
